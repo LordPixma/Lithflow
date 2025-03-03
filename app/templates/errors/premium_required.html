@@ -1,0 +1,58 @@
+<!-- app/templates/news/premium_required.html -->
+{% extends 'base.html' %}
+
+{% block title %}Premium Content - LithFlow{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Premium Content</h4>
+                </div>
+                <div class="card-body text-center py-5">
+                    <div class="mb-4">
+                        <i class="fas fa-crown fa-4x text-warning"></i>
+                    </div>
+                    <h2 class="mb-4">Premium Subscription Required</h2>
+                    <p class="lead mb-4">This research report is available exclusively to Premium subscribers.</p>
+                    
+                    <div class="row justify-content-center mb-4">
+                        <div class="col-lg-10">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h5 class="card-title">Premium Benefits Include:</h5>
+                                    <ul class="list-group list-group-flush text-start">
+                                        <li class="list-group-item bg-transparent"><i class="fas fa-check text-success me-2"></i> Access to all premium research reports</li>
+                                        <li class="list-group-item bg-transparent"><i class="fas fa-check text-success me-2"></i> Detailed project pipeline tracking</li>
+                                        <li class="list-group-item bg-transparent"><i class="fas fa-check text-success me-2"></i> Price forecasting and scenario analysis</li>
+                                        <li class="list-group-item bg-transparent"><i class="fas fa-check text-success me-2"></i> Advanced market analytics</li>
+                                        <li class="list-group-item bg-transparent"><i class="fas fa-check text-success me-2"></i> Company-level data access</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <a href="#" class="btn btn-primary btn-lg">
+                            <i class="fas fa-arrow-up me-2"></i> Upgrade to Premium
+                        </a>
+                    </div>
+                    
+                    <p class="text-muted">
+                        Contact <a href="mailto:sales@lithflow.com">sales@lithflow.com</a> for enterprise pricing options.
+                    </p>
+                </div>
+                <div class="card-footer text-center">
+                    <a href="{{ url_for('news.research_reports') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i> Back to Reports
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+Last edited 10 hours ago

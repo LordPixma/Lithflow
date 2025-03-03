@@ -1,0 +1,41 @@
+<!-- app/templates/errors/403.html -->
+{% extends 'base.html' %}
+
+{% block title %}Access Denied - LithFlow{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 text-center">
+            <div class="mb-4">
+                <img src="{{ url_for('static', filename='images/error-403.svg') }}" alt="Access Denied" style="max-width: 300px;">
+            </div>
+            <h1 class="display-4 mb-4">Access Denied</h1>
+            <p class="lead mb-4">Sorry, you don't have permission to access this page.</p>
+            
+            {% if not current_user.is_premium() %}
+            <div class="alert alert-info mb-4">
+                <p><strong>This feature requires a premium subscription.</strong></p>
+                <p class="mb-0">Upgrade your account to access exclusive premium features including:</p>
+                <ul class="list-unstyled mt-2">
+                    <li><i class="fas fa-check-circle text-success me-2"></i> Advanced Market Analytics</li>
+                    <li><i class="fas fa-check-circle text-success me-2"></i> Project Pipeline Tracking</li>
+                    <li><i class="fas fa-check-circle text-success me-2"></i> Premium Research Reports</li>
+                    <li><i class="fas fa-check-circle text-success me-2"></i> Price Forecasting Models</li>
+                </ul>
+                <a href="#" class="btn btn-primary mt-3">Upgrade Now</a>
+            </div>
+            {% endif %}
+            
+            <div class="mb-4">
+                <a href="{{ url_for('user.dashboard') }}" class="btn btn-primary me-2">
+                    <i class="fas fa-home me-2"></i> Return to Dashboard
+                </a>
+                <button class="btn btn-outline-secondary" onclick="history.back()">
+                    <i class="fas fa-arrow-left me-2"></i> Go Back
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

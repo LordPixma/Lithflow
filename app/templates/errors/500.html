@@ -1,0 +1,30 @@
+<!-- app/templates/errors/500.html -->
+{% extends 'base.html' %}
+
+{% block title %}Server Error - LithFlow{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 text-center">
+            <div class="mb-4">
+                <img src="{{ url_for('static', filename='images/error-500.svg') }}" alt="Server Error" style="max-width: 300px;">
+            </div>
+            <h1 class="display-4 mb-4">Server Error</h1>
+            <p class="lead mb-4">Sorry, something went wrong on our end. We're working to fix the issue.</p>
+            <div class="alert alert-warning mb-4">
+                <p class="mb-0">If this problem persists, please contact our support team:</p>
+                <p class="mb-0 mt-2"><strong>support@lithflow.com</strong></p>
+            </div>
+            <div class="mb-4">
+                <a href="{{ url_for('user.dashboard') }}" class="btn btn-primary me-2">
+                    <i class="fas fa-home me-2"></i> Return to Dashboard
+                </a>
+                <button class="btn btn-outline-secondary" onclick="history.back()">
+                    <i class="fas fa-arrow-left me-2"></i> Go Back
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
