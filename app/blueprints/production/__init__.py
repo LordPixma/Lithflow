@@ -1,3 +1,4 @@
+# app/blueprints/production/__init__.py
 from flask import Blueprint
 
 production_bp = Blueprint('production', __name__, url_prefix='/production')

@@ -1,0 +1,438 @@
+<!-- app/templates/market/supply_demand.html -->
+{% extends 'base.html' %}
+
+{% block title %}Supply-Demand Balance - LithFlow{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Lithium Supply-Demand Balance</h5>
+                <div>
+                    <button class="btn btn-sm btn-outline-secondary" id="refreshDataBtn">
+                        <i class="fas fa-sync-alt"></i> Refresh Data
+                    </button>
+                    <div class="btn-group ms-2">
+                        <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-download"></i> Export
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="#" id="exportPNG">PNG Image</a></li>
+                            <li><a class="dropdown-item" href="#" id="exportCSV">CSV Data</a></li>
+                            <li><a class="dropdown-item" href="#" id="exportPDF">PDF Report</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="form-group row">
+                            <label class="col-sm-4 col-form-label">Year Range:</label>
+                            <div class="col-sm-8">
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="startYearInput" min="2010" max="2030" value="2020">
+                                    <span class="input-group-text">to</span>
+                                    <input type="number" class="form-control" id="endYearInput" min="2010" max="2030" value="2025">
+                                    <button class="btn btn-outline-secondary" id="updateRangeBtn">Update</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group row">
+                            <label class="col-sm-4 col-form-label">Display Options:</label>
+                            <div class="col-sm-8">
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" id="showSupplyCheck" checked>
+                                    <label class="form-check-label" for="showSupplyCheck">Supply</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" id="showDemandCheck" checked>
+                                    <label class="form-check-label" for="showDemandCheck">Demand</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" id="showBalanceCheck" checked>
+                                    <label class="form-check-label" for="showBalanceCheck">Balance</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="chart-container" style="position: relative; height:60vh;">
+                    <canvas id="supplyDemandChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="mb-0">Supply-Demand Metrics</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Metric</th>
+                            <th>Current Year</th>
+                            <th>Next Year</th>
+                            <th>5-Year CAGR</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Global Supply (tons LCE)</td>
+                            <td id="currentSupply">Loading...</td>
+                            <td id="nextYearSupply">Loading...</td>
+                            <td id="supplyCAGR">Loading...</td>
+                        </tr>
+                        <tr>
+                            <td>Global Demand (tons LCE)</td>
+                            <td id="currentDemand">Loading...</td>
+                            <td id="nextYearDemand">Loading...</td>
+                            <td id="demandCAGR">Loading...</td>
+                        </tr>
+                        <tr>
+                            <td>Market Balance (tons LCE)</td>
+                            <td id="currentBalance">Loading...</td>
+                            <td id="nextYearBalance">Loading...</td>
+                            <td>-</td>
+                        </tr>
+                        <tr>
+                            <td>Balance as % of Demand</td>
+                            <td id="currentBalancePct">Loading...</td>
+                            <td id="nextYearBalancePct">Loading...</td>
+                            <td>-</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div class="alert mt-3" id="marketStatusAlert">
+                    <strong>Market Status:</strong> <span id="marketStatusText">Loading...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="mb-0">Demand Growth by Application</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="demandBreakdownChart"></canvas>
+                
+                <div class="mt-3">
+                    <strong>Key Demand Growth Drivers:</strong>
+                    <ul class="list-group list-group-flush mt-2">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Electric Vehicles
+                            <span class="badge bg-primary rounded-pill">+45% YoY</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Energy Storage Systems
+                            <span class="badge bg-primary rounded-pill">+38% YoY</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Consumer Electronics
+                            <span class="badge bg-primary rounded-pill">+12% YoY</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Industrial Applications
+                            <span class="badge bg-primary rounded-pill">+8% YoY</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize charts
+    const supplyDemandCtx = document.getElementById('supplyDemandChart').getContext('2d');
+    let supplyDemandChart = new Chart(supplyDemandCtx, {
+        type: 'bar',
+        data: {
+            labels: [],
+            datasets: [
+                {
+                    label: 'Supply',
+                    data: [],
+                    backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                    borderColor: 'rgb(54, 162, 235)',
+                    borderWidth: 1,
+                    order: 2
+                },
+                {
+                    label: 'Demand',
+                    data: [],
+                    backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                    borderColor: 'rgb(255, 99, 132)',
+                    borderWidth: 1,
+                    order: 3
+                },
+                {
+                    label: 'Balance',
+                    data: [],
+                    backgroundColor: 'rgba(75, 192, 192, 0.5)',
+                    borderColor: 'rgb(75, 192, 192)',
+                    borderWidth: 1,
+                    type: 'line',
+                    yAxisID: 'y1',
+                    order: 1
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Year'
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Tons LCE'
+                    },
+                    beginAtZero: true
+                },
+                y1: {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    title: {
+                        display: true,
+                        text: 'Balance (Tons LCE)'
+                    },
+                    grid: {
+                        drawOnChartArea: false
+                    }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.parsed.y !== null) {
+                                label += context.parsed.y.toLocaleString() + ' tons LCE';
+                            }
+                            return label;
+                        }
+                    }
+                }
+            }
+        }
+    });
+    
+    const demandBreakdownCtx = document.getElementById('demandBreakdownChart').getContext('2d');
+    let demandBreakdownChart = new Chart(demandBreakdownCtx, {
+        type: 'pie',
+        data: {
+            labels: ['EVs', 'Energy Storage', 'Consumer Electronics', 'Industrial Applications', 'Other'],
+            datasets: [{
+                data: [65, 15, 10, 7, 3],
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.7)',
+                    'rgba(54, 162, 235, 0.7)',
+                    'rgba(255, 206, 86, 0.7)',
+                    'rgba(75, 192, 192, 0.7)',
+                    'rgba(153, 102, 255, 0.7)'
+                ],
+                borderColor: [
+                    'rgb(255, 99, 132)',
+                    'rgb(54, 162, 235)',
+                    'rgb(255, 206, 86)',
+                    'rgb(75, 192, 192)',
+                    'rgb(153, 102, 255)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                },
+                title: {
+                    display: true,
+                    text: 'Lithium Demand by Application (2024)'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.label + ': ' + context.parsed + '%';
+                        }
+                    }
+                }
+            }
+        }
+    });
+    
+    // Load supply-demand data
+    loadSupplyDemandData();
+    
+    // Event listeners
+    document.getElementById('updateRangeBtn').addEventListener('click', loadSupplyDemandData);
+    document.getElementById('refreshDataBtn').addEventListener('click', loadSupplyDemandData);
+    document.getElementById('showSupplyCheck').addEventListener('change', toggleDatasetVisibility);
+    document.getElementById('showDemandCheck').addEventListener('change', toggleDatasetVisibility);
+    document.getElementById('showBalanceCheck').addEventListener('change', toggleDatasetVisibility);
+    
+    // Function to load supply-demand data
+    function loadSupplyDemandData() {
+        const startYear = document.getElementById('startYearInput').value;
+        const endYear = document.getElementById('endYearInput').value;
+        
+        // Validate input
+        if (parseInt(startYear) > parseInt(endYear)) {
+            alert('Start year must be less than or equal to end year');
+            return;
+        }
+        
+        // Fetch data from API
+        fetch(`/market/api/supply-demand-data?start_year=${startYear}&end_year=${endYear}`)
+            .then(response => response.json())
+            .then(data => {
+                // Update chart data
+                supplyDemandChart.data.labels = data.map(item => item.year);
+                supplyDemandChart.data.datasets[0].data = data.map(item => item.supply);
+                supplyDemandChart.data.datasets[1].data = data.map(item => item.demand);
+                supplyDemandChart.data.datasets[2].data = data.map(item => item.balance);
+                
+                // Mark forecast data with pattern
+                const forecasts = data.map(item => item.is_forecast);
+                supplyDemandChart.data.datasets.forEach(dataset => {
+                    dataset.backgroundColor = data.map((item, i) => 
+                        item.is_forecast ? 
+                        createPatternCanvas(dataset.backgroundColor.toString(), 'rgba(0, 0, 0, 0.2)') : 
+                        dataset.backgroundColor
+                    );
+                });
+                
+                supplyDemandChart.update();
+                
+                // Update metrics table if data available
+                if (data.length > 0) {
+                    const currentYear = new Date().getFullYear();
+                    const currentYearData = data.find(item => item.year === currentYear);
+                    const nextYearData = data.find(item => item.year === currentYear + 1);
+                    
+                    if (currentYearData) {
+                        document.getElementById('currentSupply').textContent = currentYearData.supply.toLocaleString() + ' tons';
+                        document.getElementById('currentDemand').textContent = currentYearData.demand.toLocaleString() + ' tons';
+                        document.getElementById('currentBalance').textContent = currentYearData.balance.toLocaleString() + ' tons';
+                        
+                        const balancePct = (currentYearData.balance / currentYearData.demand * 100).toFixed(1);
+                        document.getElementById('currentBalancePct').textContent = balancePct + '%';
+                    }
+                    
+                    if (nextYearData) {
+                        document.getElementById('nextYearSupply').textContent = nextYearData.supply.toLocaleString() + ' tons';
+                        document.getElementById('nextYearDemand').textContent = nextYearData.demand.toLocaleString() + ' tons';
+                        document.getElementById('nextYearBalance').textContent = nextYearData.balance.toLocaleString() + ' tons';
+                        
+                        const balancePct = (nextYearData.balance / nextYearData.demand * 100).toFixed(1);
+                        document.getElementById('nextYearBalancePct').textContent = balancePct + '%';
+                    }
+                    
+                    // Calculate 5-year CAGR if enough data points
+                    if (data.length >= 5) {
+                        const startIndex = data.length - 5;
+                        const endIndex = data.length - 1;
+                        
+                        const startSupply = data[startIndex].supply;
+                        const endSupply = data[endIndex].supply;
+                        const supplyCagr = calculateCAGR(startSupply, endSupply, 5).toFixed(1) + '%';
+                        document.getElementById('supplyCAGR').textContent = supplyCagr;
+                        
+                        const startDemand = data[startIndex].demand;
+                        const endDemand = data[endIndex].demand;
+                        const demandCagr = calculateCAGR(startDemand, endDemand, 5).toFixed(1) + '%';
+                        document.getElementById('demandCAGR').textContent = demandCagr;
+                    }
+                    
+                    // Set market status alert
+                    if (currentYearData) {
+                        const balance = currentYearData.balance;
+                        const marketStatusAlert = document.getElementById('marketStatusAlert');
+                        const marketStatusText = document.getElementById('marketStatusText');
+                        
+                        if (balance > 10000) {
+                            marketStatusAlert.className = 'alert alert-success mt-3';
+                            marketStatusText.textContent = 'Market Surplus - Balanced market conditions expected';
+                        } else if (balance > 0) {
+                            marketStatusAlert.className = 'alert alert-info mt-3';
+                            marketStatusText.textContent = 'Slight Surplus - Generally balanced market';
+                        } else if (balance > -10000) {
+                            marketStatusAlert.className = 'alert alert-warning mt-3';
+                            marketStatusText.textContent = 'Slight Deficit - Potential for price increases';
+                        } else {
+                            marketStatusAlert.className = 'alert alert-danger mt-3';
+                            marketStatusText.textContent = 'Significant Deficit - Supply constraints likely to cause price volatility';
+                        }
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching supply-demand data:', error);
+                alert('Failed to load supply-demand data. Please try again later.');
+            });
+    }
+    
+    // Function to toggle dataset visibility
+    function toggleDatasetVisibility() {
+        supplyDemandChart.data.datasets[0].hidden = !document.getElementById('showSupplyCheck').checked;
+        supplyDemandChart.data.datasets[1].hidden = !document.getElementById('showDemandCheck').checked;
+        supplyDemandChart.data.datasets[2].hidden = !document.getElementById('showBalanceCheck').checked;
+        supplyDemandChart.update();
+    }
+    
+    // Helper function to calculate CAGR
+    function calculateCAGR(startValue, endValue, years) {
+        return (Math.pow(endValue / startValue, 1 / years) - 1) * 100;
+    }
+    
+    // Helper function to create pattern canvas for forecasted data
+    function createPatternCanvas(baseColor, patternColor) {
+        const patternCanvas = document.createElement('canvas');
+        patternCanvas.width = 6;
+        patternCanvas.height = 6;
+        const ctx = patternCanvas.getContext('2d');
+        
+        // Fill with base color
+        ctx.fillStyle = baseColor;
+        ctx.fillRect(0, 0, 6, 6);
+        
+        // Add diagonal lines
+        ctx.strokeStyle = patternColor;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(0, 6);
+        ctx.lineTo(6, 0);
+        ctx.stroke();
+        
+        return ctx.createPattern(patternCanvas, 'repeat');
+    }
+});
+</script>
+{% endblock %}

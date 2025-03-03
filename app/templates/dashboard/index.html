@@ -1,0 +1,331 @@
+<!-- app/templates/dashboard/index.html -->
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - LithFlow{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Lithium Market Overview</h5>
+                <div>
+                    <button class="btn btn-sm btn-outline-secondary" id="refreshDataBtn">
+                        <i class="fas fa-sync-alt"></i> Refresh Data
+                    </button>
+                    <div class="btn-group ms-2">
+                        <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-download"></i> Export
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="#" id="exportPNG">PNG Image</a></li>
+                            <li><a class="dropdown-item" href="#" id="exportCSV">CSV Data</a></li>
+                            <li><a class="dropdown-item" href="#" id="exportPDF">PDF Report</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="form-group mb-3">
+                            <label for="compoundSelect">Compound</label>
+                            <select class="form-select" id="compoundSelect">
+                                {% for compound in compounds %}
+                                <option value="{{ compound }}">{{ compound|title }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group mb-3">
+                            <label for="regionSelect">Region</label>
+                            <select class="form-select" id="regionSelect">
+                                {% for region in regions %}
+                                <option value="{{ region }}">{{ region }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group mb-3">
+                            <label for="periodSelect">Time Period</label>
+                            <select class="form-select" id="periodSelect">
+                                <option value="1m">1 Month</option>
+                                <option value="3m">3 Months</option>
+                                <option value="6m">6 Months</option>
+                                <option value="1y" selected>1 Year</option>
+                                <option value="all">All Time</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group mb-3">
+                            <label for="displayTypeSelect">Display Type</label>
+                            <select class="form-select" id="displayTypeSelect">
+                                <option value="line">Line Chart</option>
+                                <option value="bar">Bar Chart</option>
+                                <option value="candlestick">Candlestick</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="chart-container" style="position: relative; height:50vh;">
+                    <canvas id="priceChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="mb-0">Price Statistics</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm">
+                    <tbody>
+                        <tr>
+                            <th>Current Price:</th>
+                            <td id="currentPrice">Loading...</td>
+                        </tr>
+                        <tr>
+                            <th>1 Day Change:</th>
+                            <td id="dayChange">Loading...</td>
+                        </tr>
+                        <tr>
+                            <th>1 Week Change:</th>
+                            <td id="weekChange">Loading...</td>
+                        </tr>
+                        <tr>
+                            <th>1 Month Change:</th>
+                            <td id="monthChange">Loading...</td>
+                        </tr>
+                        <tr>
+                            <th>1 Year Change:</th>
+                            <td id="yearChange">Loading...</td>
+                        </tr>
+                        <tr>
+                            <th>All-Time High:</th>
+                            <td id="allTimeHigh">Loading...</td>
+                        </tr>
+                        <tr>
+                            <th>All-Time Low:</th>
+                            <td id="allTimeLow">Loading...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="mb-0">Key Market Events</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    <a href="#" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">China EV Policy Change</h6>
+                            <small>3 days ago</small>
+                        </div>
+                        <p class="mb-1">China announces new EV subsidy program for 2025-2027</p>
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">Argentina Production Delay</h6>
+                            <small>1 week ago</small>
+                        </div>
+                        <p class="mb-1">Major project in Argentina faces 6-month construction delay</p>
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">New Chilean Regulations</h6>
+                            <small>2 weeks ago</small>
+                        </div>
+                        <p class="mb-1">Chile introduces new water use restrictions for lithium operations</p>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="mb-0">Regional Price Comparison</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="regionalComparisonChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize charts
+    const priceChartCtx = document.getElementById('priceChart').getContext('2d');
+    let priceChart = new Chart(priceChartCtx, {
+        type: 'line',
+        data: {
+            datasets: [{
+                label: 'Price (USD/ton)',
+                data: [],
+                borderColor: 'rgb(54, 162, 235)',
+                backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                borderWidth: 2,
+                tension: 0.1,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: {
+                    type: 'time',
+                    time: {
+                        unit: 'month'
+                    }
+                },
+                y: {
+                    beginAtZero: false
+                }
+            },
+            interaction: {
+                mode: 'index',
+                intersect: false
+            },
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `Price: $${context.parsed.y.toLocaleString()} USD/ton`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+    
+    const regionalChartCtx = document.getElementById('regionalComparisonChart').getContext('2d');
+    let regionalChart = new Chart(regionalChartCtx, {
+        type: 'bar',
+        data: {
+            labels: ['China', 'US', 'Europe', 'South America'],
+            datasets: [{
+                label: 'Current Price (USD/ton)',
+                data: [18000, 19200, 18600, 17500],
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.5)',
+                    'rgba(54, 162, 235, 0.5)',
+                    'rgba(255, 206, 86, 0.5)',
+                    'rgba(75, 192, 192, 0.5)'
+                ],
+                borderColor: [
+                    'rgb(255, 99, 132)',
+                    'rgb(54, 162, 235)',
+                    'rgb(255, 206, 86)',
+                    'rgb(75, 192, 192)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: false
+                }
+            }
+        }
+    });
+    
+    // Function to load price data
+    function loadPriceData() {
+        const compound = document.getElementById('compoundSelect').value;
+        const region = document.getElementById('regionSelect').value;
+        const period = document.getElementById('periodSelect').value;
+        
+        // Show loading state
+        priceChart.data.datasets[0].data = [];
+        priceChart.update();
+        
+        // Fetch data from API
+        fetch(`/prices/api/price-data?compound=${compound}&region=${region}&period=${period}`)
+            .then(response => response.json())
+            .then(data => {
+                // Update chart with new data
+                priceChart.data.datasets[0].data = data.map(item => ({
+                    x: new Date(item.date),
+                    y: item.price
+                }));
+                priceChart.options.scales.x.time.unit = period === '1m' ? 'day' : 'month';
+                priceChart.update();
+                
+                // Update statistics
+                if (data.length > 0) {
+                    const current = data[data.length - 1].price;
+                    const yesterday = data.length > 1 ? data[data.length - 2].price : null;
+                    const lastWeek = data.length > 7 ? data[data.length - 8].price : null;
+                    const lastMonth = data.length > 30 ? data[data.length - 31].price : null;
+                    const lastYear = data.length > 365 ? data[data.length - 366].price : null;
+                    
+                    document.getElementById('currentPrice').textContent = `$${current.toLocaleString()} USD/ton`;
+                    
+                    if (yesterday) {
+                        const dayChangePercent = ((current - yesterday) / yesterday * 100).toFixed(2);
+                        const dayChangeClass = dayChangePercent >= 0 ? 'text-success' : 'text-danger';
+                        const dayChangeIcon = dayChangePercent >= 0 ? 'fa-arrow-up' : 'fa-arrow-down';
+                        document.getElementById('dayChange').innerHTML = `
+                            <span class="${dayChangeClass}">
+                                <i class="fas ${dayChangeIcon}"></i> ${Math.abs(dayChangePercent)}%
+                            </span>
+                        `;
+                    }
+                    
+                    // Similar updates for other time periods...
+                    
+                    // Find all-time high and low
+                    const prices = data.map(item => item.price);
+                    const allTimeHigh = Math.max(...prices);
+                    const allTimeLow = Math.min(...prices);
+                    
+                    document.getElementById('allTimeHigh').textContent = `$${allTimeHigh.toLocaleString()} USD/ton`;
+                    document.getElementById('allTimeLow').textContent = `$${allTimeLow.toLocaleString()} USD/ton`;
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching price data:', error);
+            });
+    }
+    
+    // Event listeners for filters
+    document.getElementById('compoundSelect').addEventListener('change', loadPriceData);
+    document.getElementById('regionSelect').addEventListener('change', loadPriceData);
+    document.getElementById('periodSelect').addEventListener('change', loadPriceData);
+    document.getElementById('displayTypeSelect').addEventListener('change', function() {
+        const chartType = this.value;
+        priceChart.config.type = chartType === 'candlestick' ? 'bar' : chartType;
+        priceChart.update();
+    });
+    
+    document.getElementById('refreshDataBtn').addEventListener('click', loadPriceData);
+    
+    // Initial data load
+    loadPriceData();
+});
+</script>
+{% endblock %}

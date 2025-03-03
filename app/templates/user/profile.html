@@ -1,0 +1,205 @@
+<!-- app/templates/user/profile.html -->
+{% extends 'base.html' %}
+
+{% block title %}User Profile - LithFlow{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-lg-3">
+            <div class="card mb-4">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <div class="avatar-circle mx-auto">
+                            <span class="avatar-text">{{ current_user.username[0]|upper }}</span>
+                        </div>
+                    </div>
+                    <h5 class="card-title mb-1">{{ current_user.username }}</h5>
+                    <p class="text-muted mb-1">{{ current_user.company }}</p>
+                    <div class="mt-2">
+                        {% if current_user.is_premium() %}
+                        <span class="badge bg-warning text-dark">Premium</span>
+                        {% else %}
+                        <span class="badge bg-secondary">Basic</span>
+                        {% endif %}
+                        
+                        {% if current_user.is_admin() %}
+                        <span class="badge bg-danger">Admin</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        Member Since
+                        <span class="text-muted">{{ current_user.created_at.strftime('%b %d, %Y') }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        Last Login
+                        <span class="text-muted">{{ current_user.last_login.strftime('%b %d, %Y') }}</span>
+                    </li>
+                </ul>
+                <div class="card-body">
+                    {% if not current_user.is_premium() %}
+                    <a href="#" class="btn btn-warning btn-sm w-100 mb-2">
+                        <i class="fas fa-crown me-1"></i> Upgrade to Premium
+                    </a>
+                    {% endif %}
+                    <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-danger btn-sm w-100">
+                        <i class="fas fa-sign-out-alt me-1"></i> Sign Out
+                    </a>
+                </div>
+            </div>
+            
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Navigation</h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="{{ url_for('user.profile') }}" class="list-group-item list-group-item-action active">
+                        <i class="fas fa-user me-2"></i> Profile
+                    </a>
+                    <a href="{{ url_for('user.change_password') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-key me-2"></i> Change Password
+                    </a>
+                    <a href="{{ url_for('user.preferences') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-cog me-2"></i> Preferences
+                    </a>
+                    <a href="{{ url_for('user.alerts') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-bell me-2"></i> Alerts
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-9">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Profile Information</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('user.profile') }}">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="username" class="form-label">Username</label>
+                                    {{ form.username(class="form-control", id="username") }}
+                                    {% if form.username.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.username.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="email" class="form-label">Email Address</label>
+                                    {{ form.email(class="form-control", id="email") }}
+                                    {% if form.email.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.email.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="company" class="form-label">Company</label>
+                                    {{ form.company(class="form-control", id="company") }}
+                                    {% if form.company.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.company.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i> Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Account Activity</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover data-table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Activity</th>
+                                    <th>IP Address</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Login</td>
+                                    <td>192.168.1.1</td>
+                                    <td>{{ current_user.last_login.strftime('%Y-%m-%d %H:%M') }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Password Changed</td>
+                                    <td>192.168.1.1</td>
+                                    <td>2023-09-15 14:32</td>
+                                </tr>
+                                <tr>
+                                    <td>Profile Updated</td>
+                                    <td>192.168.1.1</td>
+                                    <td>2023-09-10 09:45</td>
+                                </tr>
+                                <tr>
+                                    <td>Login</td>
+                                    <td>192.168.1.1</td>
+                                    <td>2023-09-10 09:30</td>
+                                </tr>
+                                <tr>
+                                    <td>Account Created</td>
+                                    <td>192.168.1.1</td>
+                                    <td>{{ current_user.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block head_extras %}
+<style>
+    .avatar-circle {
+        width: 100px;
+        height: 100px;
+        background-color: #0d6efd;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .avatar-text {
+        font-size: 40px;
+        color: white;
+        font-weight: bold;
+    }
+</style>
+{% endblock %}

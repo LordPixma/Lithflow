@@ -1,0 +1,210 @@
+<!-- app/templates/user/preferences.html -->
+{% extends 'base.html' %}
+
+{% block title %}User Preferences - LithFlow{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-lg-3">
+            <div class="card mb-4">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <div class="avatar-circle mx-auto">
+                            <span class="avatar-text">{{ current_user.username[0]|upper }}</span>
+                        </div>
+                    </div>
+                    <h5 class="card-title mb-1">{{ current_user.username }}</h5>
+                    <p class="text-muted mb-1">{{ current_user.company }}</p>
+                    <div class="mt-2">
+                        {% if current_user.is_premium() %}
+                        <span class="badge bg-warning text-dark">Premium</span>
+                        {% else %}
+                        <span class="badge bg-secondary">Basic</span>
+                        {% endif %}
+                        
+                        {% if current_user.is_admin() %}
+                        <span class="badge bg-danger">Admin</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Navigation</h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="{{ url_for('user.profile') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-user me-2"></i> Profile
+                    </a>
+                    <a href="{{ url_for('user.change_password') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-key me-2"></i> Change Password
+                    </a>
+                    <a href="{{ url_for('user.preferences') }}" class="list-group-item list-group-item-action active">
+                        <i class="fas fa-cog me-2"></i> Preferences
+                    </a>
+                    <a href="{{ url_for('user.alerts') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-bell me-2"></i> Alerts
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-9">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">User Preferences</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('user.preferences') }}">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <h5 class="border-bottom pb-2">Dashboard Preferences</h5>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="default_dashboard" class="form-label">Default Dashboard</label>
+                                    {{ form.default_dashboard(class="form-select", id="default_dashboard") }}
+                                    {% if form.default_dashboard.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.default_dashboard.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-text">Choose which dashboard to show when you log in</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <h5 class="border-bottom pb-2">Chart Preferences</h5>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="chart_color_theme" class="form-label">Chart Color Theme</label>
+                                    {{ form.chart_color_theme(class="form-select", id="chart_color_theme") }}
+                                    {% if form.chart_color_theme.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.chart_color_theme.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="default_chart_type" class="form-label">Default Chart Type</label>
+                                    {{ form.default_chart_type(class="form-select", id="default_chart_type") }}
+                                    {% if form.default_chart_type.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.default_chart_type.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <h5 class="border-bottom pb-2">Notification Preferences</h5>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check form-switch mb-3">
+                                    {{ form.email_notifications(class="form-check-input", id="email_notifications") }}
+                                    <label class="form-check-label" for="email_notifications">Email Notifications</label>
+                                    {% if form.email_notifications.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.email_notifications.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="notification_frequency" class="form-label">Notification Frequency</label>
+                                    {{ form.notification_frequency(class="form-select", id="notification_frequency") }}
+                                    {% if form.notification_frequency.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.notification_frequency.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <h5 class="border-bottom pb-2">Display Preferences</h5>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="items_per_page" class="form-label">Items Per Page</label>
+                                    {{ form.items_per_page(class="form-select", id="items_per_page") }}
+                                    {% if form.items_per_page.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.items_per_page.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="date_format" class="form-label">Date Format</label>
+                                    {{ form.date_format(class="form-select", id="date_format") }}
+                                    {% if form.date_format.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.date_format.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i> Save Preferences
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block head_extras %}
+<style>
+    .avatar-circle {
+        width: 100px;
+        height: 100px;
+        background-color: #0d6efd;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .avatar-text {
+        font-size: 40px;
+        color: white;
+        font-weight: bold;
+    }
+</style>
+{% endblock %}

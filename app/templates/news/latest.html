@@ -1,0 +1,352 @@
+<!-- app/templates/news/latest.html -->
+{% extends 'base.html' %}
+
+{% block title %}Latest News - LithFlow{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Latest Lithium Industry News</h5>
+                <div>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-filter"></i> Filter
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><h6 class="dropdown-header">Categories</h6></li>
+                            <li><a class="dropdown-item category-filter" href="#" data-category="all">All Categories</a></li>
+                            {% for category in categories %}
+                            <li><a class="dropdown-item category-filter" href="#" data-category="{{ category }}">{{ category|title }}</a></li>
+                            {% endfor %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li><h6 class="dropdown-header">Time Period</h6></li>
+                            <li><a class="dropdown-item time-filter" href="#" data-days="1">Today</a></li>
+                            <li><a class="dropdown-item time-filter" href="#" data-days="7">Last 7 Days</a></li>
+                            <li><a class="dropdown-item time-filter" href="#" data-days="30">Last 30 Days</a></li>
+                            <li><a class="dropdown-item time-filter" href="#" data-days="90">Last 90 Days</a></li>
+                        </ul>
+                    </div>
+                    <button class="btn btn-sm btn-outline-secondary ms-2" id="refreshNewsBtn">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="newsSearchInput" placeholder="Search news...">
+                            <button class="btn btn-outline-secondary" id="newsSearchBtn">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-6 text-md-end">
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-outline-secondary active" id="listViewBtn">
+                                <i class="fas fa-list"></i> List
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" id="cardViewBtn">
+                                <i class="fas fa-th-large"></i> Cards
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- News Articles Container -->
+                <div id="newsContainer" class="mb-3">
+                    <div class="d-flex justify-content-center my-5">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- List View Template (hidden) -->
+                <div id="listViewTemplate" class="d-none">
+                    <div class="list-group">
+                        <!-- News items will be inserted here -->
+                    </div>
+                </div>
+                
+                <!-- Card View Template (hidden) -->
+                <div id="cardViewTemplate" class="d-none">
+                    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                        <!-- News items will be inserted here -->
+                    </div>
+                </div>
+                
+                <!-- Load More Button -->
+                <div class="text-center mt-3">
+                    <button class="btn btn-primary" id="loadMoreBtn">Load More</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize variables
+    let currentCategory = 'all';
+    let currentDays = 7;
+    let currentPage = 1;
+    let currentView = 'list'; // list or card
+    const itemsPerPage = 10;
+    
+    // Load initial news data
+    loadNewsData();
+    
+    // Event listeners for filters
+    document.querySelectorAll('.category-filter').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            currentCategory = this.dataset.category;
+            currentPage = 1;
+            loadNewsData();
+        });
+    });
+    
+    document.querySelectorAll('.time-filter').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            currentDays = parseInt(this.dataset.days);
+            currentPage = 1;
+            loadNewsData();
+        });
+    });
+    
+    // Event listener for refresh button
+    document.getElementById('refreshNewsBtn').addEventListener('click', function() {
+        currentPage = 1;
+        loadNewsData();
+    });
+    
+    // Event listeners for view toggle
+    document.getElementById('listViewBtn').addEventListener('click', function() {
+        document.getElementById('listViewBtn').classList.add('active');
+        document.getElementById('cardViewBtn').classList.remove('active');
+        currentView = 'list';
+        displayNews();
+    });
+    
+    document.getElementById('cardViewBtn').addEventListener('click', function() {
+        document.getElementById('cardViewBtn').classList.add('active');
+        document.getElementById('listViewBtn').classList.remove('active');
+        currentView = 'card';
+        displayNews();
+    });
+    
+    // Event listener for load more button
+    document.getElementById('loadMoreBtn').addEventListener('click', function() {
+        currentPage++;
+        loadNewsData(true); // append = true
+    });
+    
+    // Event listener for search
+    document.getElementById('newsSearchBtn').addEventListener('click', function() {
+        const query = document.getElementById('newsSearchInput').value.trim();
+        if (query) {
+            window.location.href = '/news/search?query=' + encodeURIComponent(query);
+        }
+    });
+    
+    // Allow Enter key in search input
+    document.getElementById('newsSearchInput').addEventListener('keyup', function(e) {
+        if (e.key === 'Enter') {
+            document.getElementById('newsSearchBtn').click();
+        }
+    });
+    
+    // News data storage
+    let newsArticles = [];
+    
+    // Function to load news data
+    function loadNewsData(append = false) {
+        // Show loading state
+        if (!append) {
+            document.getElementById('newsContainer').innerHTML = `
+                <div class="d-flex justify-content-center my-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Build API URL
+        const apiUrl = `/news/api/latest-news?category=${currentCategory}&days=${currentDays}&limit=${itemsPerPage * currentPage}`;
+        
+        // Fetch data from API
+        fetch(apiUrl)
+            .then(response => response.json())
+            .then(data => {
+                if (!append) {
+                    newsArticles = data;
+                } else {
+                    // Filter out duplicates before appending
+                    const newIds = newsArticles.map(article => article.id);
+                    const newArticles = data.filter(article => !newIds.includes(article.id));
+                    newsArticles = [...newsArticles, ...newArticles];
+                }
+                
+                displayNews();
+                
+                // Hide load more button if no more results
+                document.getElementById('loadMoreBtn').style.display = 
+                    data.length < itemsPerPage * currentPage ? 'none' : 'block';
+            })
+            .catch(error => {
+                console.error('Error fetching news data:', error);
+                document.getElementById('newsContainer').innerHTML = `
+                    <div class="alert alert-danger">
+                        Failed to load news. Please try again later.
+                    </div>
+                `;
+            });
+    }
+    
+    // Function to display news based on current view
+    function displayNews() {
+        const container = document.getElementById('newsContainer');
+        
+        if (newsArticles.length === 0) {
+            container.innerHTML = `
+                <div class="alert alert-info">
+                    No news articles found matching your criteria.
+                </div>
+            `;
+            return;
+        }
+        
+        if (currentView === 'list') {
+            // List view
+            const listTemplate = document.getElementById('listViewTemplate').querySelector('.list-group').cloneNode(true);
+            listTemplate.innerHTML = ''; // Clear template
+            
+            newsArticles.forEach(article => {
+                // Format date
+                const pubDate = new Date(article.published_date);
+                const formattedDate = pubDate.toLocaleDateString();
+                
+                // Create sentiment badge if available
+                let sentimentBadge = '';
+                if (article.sentiment_score !== null) {
+                    let sentimentClass = 'bg-secondary';
+                    if (article.sentiment_score > 0.2) sentimentClass = 'bg-success';
+                    else if (article.sentiment_score < -0.2) sentimentClass = 'bg-danger';
+                    else sentimentClass = 'bg-warning text-dark';
+                    
+                    sentimentBadge = `<span class="badge ${sentimentClass} ms-2">
+                        ${article.sentiment_score > 0 ? '+' : ''}${article.sentiment_score.toFixed(2)}
+                    </span>`;
+                }
+                
+                // Create category badge if available
+                let categoryBadge = '';
+                if (article.category) {
+                    categoryBadge = `<span class="badge bg-info ms-2">${article.category}</span>`;
+                }
+                
+                // Create tags badges if available
+                let tagsBadges = '';
+                if (article.tags && article.tags.length) {
+                    tagsBadges = article.tags.map(tag => 
+                        `<span class="badge bg-secondary me-1">${tag}</span>`
+                    ).join('');
+                    tagsBadges = `<div class="mt-1">${tagsBadges}</div>`;
+                }
+                
+                const listItem = document.createElement('a');
+                listItem.href = article.url;
+                listItem.target = "_blank";
+                listItem.className = 'list-group-item list-group-item-action';
+                listItem.innerHTML = `
+                    <div class="d-flex w-100 justify-content-between">
+                        <h5 class="mb-1">${article.title}</h5>
+                        <small>${formattedDate}</small>
+                    </div>
+                    <p class="mb-1">${article.summary}</p>
+                    <div>
+                        <small class="text-muted">Source: ${article.source}</small>
+                        ${sentimentBadge}
+                        ${categoryBadge}
+                    </div>
+                    ${tagsBadges}
+                `;
+                
+                listTemplate.appendChild(listItem);
+            });
+            
+            container.innerHTML = '';
+            container.appendChild(listTemplate);
+            
+        } else {
+            // Card view
+            const cardTemplate = document.getElementById('cardViewTemplate').querySelector('.row').cloneNode(true);
+            cardTemplate.innerHTML = ''; // Clear template
+            
+            newsArticles.forEach(article => {
+                // Format date
+                const pubDate = new Date(article.published_date);
+                const formattedDate = pubDate.toLocaleDateString();
+                
+                // Create sentiment badge if available
+                let sentimentBadge = '';
+                if (article.sentiment_score !== null) {
+                    let sentimentClass = 'bg-secondary';
+                    if (article.sentiment_score > 0.2) sentimentClass = 'bg-success';
+                    else if (article.sentiment_score < -0.2) sentimentClass = 'bg-danger';
+                    else sentimentClass = 'bg-warning text-dark';
+                    
+                    sentimentBadge = `<span class="badge ${sentimentClass}">
+                        ${article.sentiment_score > 0 ? '+' : ''}${article.sentiment_score.toFixed(2)}
+                    </span>`;
+                }
+                
+                // Create category badge if available
+                let categoryBadge = '';
+                if (article.category) {
+                    categoryBadge = `<span class="badge bg-info">${article.category}</span>`;
+                }
+                
+                // Default image if none provided
+                const imageUrl = article.image_url || '/static/images/news-placeholder.jpg';
+                
+                const cardCol = document.createElement('div');
+                cardCol.className = 'col';
+                cardCol.innerHTML = `
+                    <div class="card h-100">
+                        <img src="${imageUrl}" class="card-img-top" alt="${article.title}" style="height: 180px; object-fit: cover;">
+                        <div class="card-body">
+                            <h5 class="card-title">${article.title}</h5>
+                            <p class="card-text">${article.summary}</p>
+                        </div>
+                        <div class="card-footer">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">${article.source}</small>
+                                <div>
+                                    ${sentimentBadge}
+                                    ${categoryBadge}
+                                </div>
+                            </div>
+                            <small class="text-muted">${formattedDate}</small>
+                            <a href="${article.url}" target="_blank" class="btn btn-sm btn-outline-primary mt-2 w-100">Read More</a>
+                        </div>
+                    </div>
+                `;
+                
+                cardTemplate.appendChild(cardCol);
+            });
+            
+            container.innerHTML = '';
+            container.appendChild(cardTemplate);
+        }
+    }
+});
+</script>
+{% endblock %}
