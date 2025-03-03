@@ -4,6 +4,8 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager
 from flask_wtf.csrf import CSRFProtect
+from app.models.user import AnonymousUser
+
 
 from app.config import config
 
@@ -25,6 +27,7 @@ def create_app(config_name='default'):
     csrf.init_app(app)
     
     # Set up login configuration
+    login_manager.anonymous_user = AnonymousUser
     login_manager.login_view = 'auth.login'
     login_manager.login_message_category = 'info'
     
@@ -35,6 +38,7 @@ def create_app(config_name='default'):
     from app.blueprints.market_analytics import market_bp
     from app.blueprints.news import news_bp
     from app.blueprints.user import user_bp
+    from app.blueprints.main import main_bp
     
     app.register_blueprint(auth_bp)
     app.register_blueprint(prices_bp)
@@ -42,6 +46,7 @@ def create_app(config_name='default'):
     app.register_blueprint(market_bp)
     app.register_blueprint(news_bp)
     app.register_blueprint(user_bp)
+    app.register_blueprint(main_bp)
     
     # Register error handlers
     from app.utils.error_handlers import register_error_handlers

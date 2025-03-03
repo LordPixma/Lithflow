@@ -1,6 +1,6 @@
 # app/models/user.py
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask_login import UserMixin
+from flask_login import UserMixin, AnonymousUserMixin
 from app import db, login_manager
 import datetime
 
@@ -67,6 +67,15 @@ class UserAlert(db.Model):
     
     def __repr__(self):
         return f'<UserAlert {self.alert_type}>'
+
+class AnonymousUser(AnonymousUserMixin):
+    """Anonymous user class for Flask-Login"""
+    
+    def is_premium(self):
+        return False
+    
+    def is_admin(self):
+        return False
 
 @login_manager.user_loader
 def load_user(user_id):
