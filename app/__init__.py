@@ -4,7 +4,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager
 from flask_wtf.csrf import CSRFProtect
-from app.models.user import AnonymousUser
+
 
 
 from app.config import config
@@ -25,6 +25,8 @@ def create_app(config_name='default'):
     migrate.init_app(app, db)
     login_manager.init_app(app)
     csrf.init_app(app)
+    
+    from app.models.user import AnonymousUser
     
     # Set up login configuration
     login_manager.anonymous_user = AnonymousUser
