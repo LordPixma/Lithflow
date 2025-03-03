@@ -8,7 +8,7 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_DATABASE_URI = os.environ.get(
         'DATABASE_URL',
-        'postgresql+pg8000://postgres:postgres@localhost:5432/lithflow'
+        'postgresql+pg8000://lithuser:Op3ns3sam31234@localhost:5432/lithflow'
     )
     REMEMBER_COOKIE_DURATION = timedelta(days=30)
     
@@ -21,7 +21,7 @@ class TestingConfig(Config):
     TESTING = True
     SQLALCHEMY_DATABASE_URI = os.environ.get(
         'TEST_DATABASE_URL',
-        'postgresql+pg8000://postgres:postgres@localhost:5432/lithflow_test'
+        'postgresql+pg8000://lithuser:Op3ns3sam31234@localhost:5432/lithflow_test'
     )
     WTF_CSRF_ENABLED = False
     
