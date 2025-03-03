@@ -1,6 +1,7 @@
 # app/blueprints/production/routes.py
 from flask import render_template, jsonify, request
 from flask_login import login_required, current_user
+from app import db
 from app.blueprints.production import production_bp
 from app.models.production import (
     LithiumMine, MineProduction, ProcessingPlant, 

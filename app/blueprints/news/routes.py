@@ -1,6 +1,7 @@
 # app/blueprints/news/routes.py
 from flask import render_template, jsonify, request, redirect, url_for
 from flask_login import login_required, current_user
+from app import db
 from app.blueprints.news import news_bp
 from app.models.news import (
     NewsArticle, NewsTag, NewsEntity, ResearchReport, 

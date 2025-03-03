@@ -1,0 +1,377 @@
+<!-- app/templates/prices/regional_comparison.html -->
+{% extends 'base.html' %}
+
+{% block title %}Regional Price Comparison - LithFlow{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Lithium Price Regional Comparison</h5>
+                <div>
+                    <button class="btn btn-sm btn-outline-secondary" id="refreshDataBtn">
+                        <i class="fas fa-sync-alt"></i> Refresh Data
+                    </button>
+                    <div class="btn-group ms-2">
+                        <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-download"></i> Export
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="#" id="exportPNG">PNG Image</a></li>
+                            <li><a class="dropdown-item" href="#" id="exportCSV">CSV Data</a></li>
+                            <li><a class="dropdown-item" href="#" id="exportPDF">PDF Report</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="compoundSelect">Compound</label>
+                            <select class="form-select" id="compoundSelect">
+                                {% for compound in compounds %}
+                                <option value="{{ compound }}">{{ compound|title }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="timeframeSelect">Timeframe</label>
+                            <select class="form-select" id="timeframeSelect">
+                                <option value="1m">1 Month</option>
+                                <option value="3m">3 Months</option>
+                                <option value="6m">6 Months</option>
+                                <option value="1y" selected>1 Year</option>
+                                <option value="all">All Time</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="chartTypeSelect">Chart Type</label>
+                            <select class="form-select" id="chartTypeSelect">
+                                <option value="line">Line Chart</option>
+                                <option value="bar">Bar Chart</option>
+                                <option value="radar">Radar Chart</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="chart-container" style="position: relative; height:60vh;">
+                    <canvas id="regionalComparisonChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="mb-0">Current Price Comparison</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Region</th>
+                            <th>Current Price (USD/ton)</th>
+                            <th>MoM Change</th>
+                            <th>YoY Change</th>
+                        </tr>
+                    </thead>
+                    <tbody id="priceComparisonTable">
+                        <tr>
+                            <td>China</td>
+                            <td id="chinaPrice">Loading...</td>
+                            <td id="chinaMoM">Loading...</td>
+                            <td id="chinaYoY">Loading...</td>
+                        </tr>
+                        <tr>
+                            <td>US</td>
+                            <td id="usPrice">Loading...</td>
+                            <td id="usMoM">Loading...</td>
+                            <td id="usYoY">Loading...</td>
+                        </tr>
+                        <tr>
+                            <td>Europe</td>
+                            <td id="europePrice">Loading...</td>
+                            <td id="europeMoM">Loading...</td>
+                            <td id="europeYoY">Loading...</td>
+                        </tr>
+                        <tr>
+                            <td>South America</td>
+                            <td id="southAmericaPrice">Loading...</td>
+                            <td id="southAmericaMoM">Loading...</td>
+                            <td id="southAmericaYoY">Loading...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="mb-0">Regional Pricing Factors</h5>
+            </div>
+            <div class="card-body">
+                <div class="accordion" id="pricingFactorsAccordion">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="chinaFactorsHeading">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#chinaFactorsCollapse" aria-expanded="true" aria-controls="chinaFactorsCollapse">
+                                China Pricing Factors
+                            </button>
+                        </h2>
+                        <div id="chinaFactorsCollapse" class="accordion-collapse collapse show" aria-labelledby="chinaFactorsHeading" data-bs-parent="#pricingFactorsAccordion">
+                            <div class="accordion-body">
+                                <ul>
+                                    <li>Domestic production capacity and output</li>
+                                    <li>EV subsidy policies and production quotas</li>
+                                    <li>Environmental regulations impact on production</li>
+                                    <li>Import/export dynamics with other regions</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="usFactorsHeading">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#usFactorsCollapse" aria-expanded="false" aria-controls="usFactorsCollapse">
+                                US Pricing Factors
+                            </button>
+                        </h2>
+                        <div id="usFactorsCollapse" class="accordion-collapse collapse" aria-labelledby="usFactorsHeading" data-bs-parent="#pricingFactorsAccordion">
+                            <div class="accordion-body">
+                                <ul>
+                                    <li>Limited domestic production compared to demand</li>
+                                    <li>Inflation Reduction Act requirements for battery materials</li>
+                                    <li>Trade policies and tariffs with major suppliers</li>
+                                    <li>Strategic reserves and stockpiling initiatives</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="europeFactorsHeading">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#europeFactorsCollapse" aria-expanded="false" aria-controls="europeFactorsCollapse">
+                                Europe Pricing Factors
+                            </button>
+                        </h2>
+                        <div id="europeFactorsCollapse" class="accordion-collapse collapse" aria-labelledby="europeFactorsHeading" data-bs-parent="#pricingFactorsAccordion">
+                            <div class="accordion-body">
+                                <ul>
+                                    <li>Growing battery gigafactory capacity</li>
+                                    <li>EU Battery Directive requirements</li>
+                                    <li>Limited domestic resources and production</li>
+                                    <li>Strategic partnerships with producing regions</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="saFactorsHeading">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#saFactorsCollapse" aria-expanded="false" aria-controls="saFactorsCollapse">
+                                South America Pricing Factors
+                            </button>
+                        </h2>
+                        <div id="saFactorsCollapse" class="accordion-collapse collapse" aria-labelledby="saFactorsHeading" data-bs-parent="#pricingFactorsAccordion">
+                            <div class="accordion-body">
+                                <ul>
+                                    <li>Major brine resource production in Chile, Argentina</li>
+                                    <li>Regulatory changes in producing countries</li>
+                                    <li>Water usage constraints and environmental factors</li>
+                                    <li>Processing capacity limitations</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize chart
+    const chartCtx = document.getElementById('regionalComparisonChart').getContext('2d');
+    let regionalChart = new Chart(chartCtx, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: []
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: {
+                    type: 'time',
+                    time: {
+                        unit: 'month'
+                    }
+                },
+                y: {
+                    beginAtZero: false,
+                    title: {
+                        display: true,
+                        text: 'Price (USD/ton)'
+                    }
+                }
+            },
+            interaction: {
+                mode: 'index',
+                intersect: false
+            },
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `${context.dataset.label}: $${context.parsed.y.toLocaleString()} USD/ton`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+    
+    // Function to load regional price data
+    function loadRegionalData() {
+        const compound = document.getElementById('compoundSelect').value;
+        const timeframe = document.getElementById('timeframeSelect').value;
+        
+        // Define regions
+        const regions = ['China', 'US', 'Europe', 'South America'];
+        const colors = [
+            'rgb(255, 99, 132)',
+            'rgb(54, 162, 235)',
+            'rgb(255, 206, 86)',
+            'rgb(75, 192, 192)'
+        ];
+        
+        // Show loading state
+        regionalChart.data.labels = [];
+        regionalChart.data.datasets = [];
+        regionalChart.update();
+        
+        // Prepare dataset structure
+        const datasets = regions.map((region, index) => ({
+            label: region,
+            data: [],
+            borderColor: colors[index],
+            backgroundColor: colors[index].replace(')', ', 0.1)').replace('rgb', 'rgba'),
+            borderWidth: 2,
+            tension: 0.1
+        }));
+        
+        // Promise array for fetching data for all regions
+        const fetchPromises = regions.map(region => 
+            fetch(`/prices/api/price-data?compound=${compound}&region=${region}&period=${timeframe}`)
+                .then(response => response.json())
+                .then(data => {
+                    return { region, data };
+                })
+        );
+        
+        // Wait for all data to be fetched
+        Promise.all(fetchPromises)
+            .then(results => {
+                // Process results for each region
+                results.forEach((result, index) => {
+                    const { region, data } = result;
+                    
+                    // Update chart dataset
+                    datasets[index].data = data.map(item => ({
+                        x: new Date(item.date),
+                        y: item.price
+                    }));
+                    
+                    // Update table cells
+                    if (data.length > 0) {
+                        // Current price
+                        const current = data[data.length - 1].price;
+                        document.getElementById(`${region.toLowerCase().replace(' ', '')}Price`).textContent = 
+                            `$${current.toLocaleString()} USD/ton`;
+                        
+                        // Month over Month change
+                        if (data.length > 30) {
+                            const lastMonth = data[data.length - 31].price;
+                            const momChange = ((current - lastMonth) / lastMonth * 100).toFixed(2);
+                            const momClass = momChange >= 0 ? 'text-success' : 'text-danger';
+                            const momIcon = momChange >= 0 ? 'fa-arrow-up' : 'fa-arrow-down';
+                            document.getElementById(`${region.toLowerCase().replace(' ', '')}MoM`).innerHTML = `
+                                <span class="${momClass}">
+                                    <i class="fas ${momIcon}"></i> ${Math.abs(momChange)}%
+                                </span>
+                            `;
+                        }
+                        
+                        // Year over Year change
+                        if (data.length > 365) {
+                            const lastYear = data[data.length - 366].price;
+                            const yoyChange = ((current - lastYear) / lastYear * 100).toFixed(2);
+                            const yoyClass = yoyChange >= 0 ? 'text-success' : 'text-danger';
+                            const yoyIcon = yoyChange >= 0 ? 'fa-arrow-up' : 'fa-arrow-down';
+                            document.getElementById(`${region.toLowerCase().replace(' ', '')}YoY`).innerHTML = `
+                                <span class="${yoyClass}">
+                                    <i class="fas ${yoyIcon}"></i> ${Math.abs(yoyChange)}%
+                                </span>
+                            `;
+                        }
+                    }
+                });
+                
+                // Update the chart
+                regionalChart.data.datasets = datasets;
+                regionalChart.update();
+            })
+            .catch(error => {
+                console.error('Error fetching regional price data:', error);
+            });
+    }
+    
+    // Event listeners
+    document.getElementById('compoundSelect').addEventListener('change', loadRegionalData);
+    document.getElementById('timeframeSelect').addEventListener('change', loadRegionalData);
+    document.getElementById('chartTypeSelect').addEventListener('change', function() {
+        regionalChart.config.type = this.value;
+        regionalChart.update();
+    });
+    
+    document.getElementById('refreshDataBtn').addEventListener('click', loadRegionalData);
+    
+    // Export functionality
+    document.getElementById('exportPNG').addEventListener('click', function() {
+        const url = regionalChart.toBase64Image();
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'regional-price-comparison.png';
+        link.click();
+    });
+    
+    document.getElementById('exportCSV').addEventListener('click', function() {
+        // Placeholder for CSV export
+        alert('CSV export functionality will be implemented in production');
+    });
+    
+    document.getElementById('exportPDF').addEventListener('click', function() {
+        // Placeholder for PDF export
+        alert('PDF export functionality will be implemented in production');
+    });
+    
+    // Initial data load
+    loadRegionalData();
+});
+</script>
+{% endblock %}

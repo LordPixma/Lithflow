@@ -1,6 +1,7 @@
 # app/blueprints/market_analytics/routes.py
 from flask import render_template, jsonify, request
 from flask_login import login_required, current_user
+from app import db
 from app.blueprints.market_analytics import market_bp
 from app.models.market import (
     SupplyDemand, EVMarketData, BatteryChemistry,

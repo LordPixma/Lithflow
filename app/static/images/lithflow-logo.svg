@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 60">
+  <!-- Background -->
+  <rect width="200" height="60" fill="none" rx="5" ry="5" />
+  
+  <!-- Battery Symbol -->
+  <rect x="10" y="15" width="40" height="30" rx="3" ry="3" fill="#0d6efd" />
+  <rect x="50" y="22" width="5" height="16" rx="1" ry="1" fill="#0d6efd" />
+  
+  <!-- Wave Lines (Flow) -->
+  <path d="M60 30 Q70 20, 80 30 Q90 40, 100 30 Q110 20, 120 30" stroke="#0d6efd" stroke-width="4" fill="none" />
+  
+  <!-- Text -->
+  <text x="120" y="38" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#0d6efd">
+    LithFlow
+  </text>
+</svg>

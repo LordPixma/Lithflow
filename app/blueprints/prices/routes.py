@@ -1,6 +1,7 @@
 # app/blueprints/prices/routes.py
 from flask import render_template, jsonify, request
 from flask_login import login_required, current_user
+from app import db
 from app.blueprints.prices import prices_bp
 from app.models.price import LithiumPrice, RelatedCommodityPrice, PriceForecast
 from app.utils.access_control import premium_required
